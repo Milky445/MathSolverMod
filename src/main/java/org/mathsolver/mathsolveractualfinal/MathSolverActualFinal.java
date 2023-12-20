@@ -3,6 +3,7 @@ package org.mathsolver.mathsolveractualfinal;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
@@ -13,6 +14,7 @@ import net.minecraft.world.level.material.Material;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -88,6 +90,7 @@ public class MathSolverActualFinal {
                 event.setCanceled(true);
                 handleHelpMessage(message);
             } else {
+                Minecraft.getInstance().gui.getChat().addMessage(Component.nullToEmpty("Support not added for that operation. Type ?help for help."));
                 Minecraft.getInstance().gui.getChat().addMessage(Component.nullToEmpty(message));
             }
             event.setCanceled(true);
@@ -301,6 +304,7 @@ public class MathSolverActualFinal {
     public void onServerStarting(ServerStartingEvent event) {
         // Do something when the server starts
         LOGGER.info("HELLO from server starting");
+        Minecraft.getInstance().gui.getChat().addMessage(Component.nullToEmpty("Welcome, type ?help to start!"));
     }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
@@ -315,4 +319,9 @@ public class MathSolverActualFinal {
             LOGGER.info("MINECRAFT NAME >> {}", getInstance().getUser().getName());
         }
     }
+    @SubscribeEvent
+    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        Minecraft.getInstance().gui.getChat().addMessage(Component.nullToEmpty("Welcome, type ?help to start!"));
+    }
 }
+
