@@ -3,7 +3,6 @@ package org.mathsolver.mathsolveractualfinal;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
@@ -42,7 +41,7 @@ public class MathSolverActualFinal {
 
     // Define mod id in a common place for everything to reference
     public static final String MODID = "mathsolver";
-    public static final String MODVERSION = "BETA-1.0.1";
+    public static final String MODVERSION = "BETA-1.0.3";
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
     // Create a Deferred Register to hold Blocks which will all be registered under the "mathsolver" namespace
@@ -90,7 +89,7 @@ public class MathSolverActualFinal {
                 event.setCanceled(true);
                 handleHelpMessage(message);
             } else {
-                Minecraft.getInstance().gui.getChat().addMessage(Component.nullToEmpty("Support not added for that operation. Type ?help for help."));
+                Minecraft.getInstance().gui.getChat().addMessage(Component.nullToEmpty("Support not added for that operation. Type ?help for more info."));
                 Minecraft.getInstance().gui.getChat().addMessage(Component.nullToEmpty(message));
             }
             event.setCanceled(true);
@@ -163,7 +162,7 @@ public class MathSolverActualFinal {
     static boolean isQuadraticEquation(String message) {
         // Matches quadratic equations like "solve 1x^2 + 3x + 2"
         LOGGER.info("Checking if message is a quadratic equation...");
-        return message.matches("\\?solve\\s+(-?\\d*)?x\\^2\\s*([+-])\\s*(-?\\d*)?x\\s*([+-])\\s*(-?\\d+)\\s*for\\s*x");
+        return message.matches("\\?solve\\s+(-?\\d*(\\.\\d+)?)[a-zA-Z]\\^2\\s*([+-])\\s*(-?\\d*(\\.\\d+)?)[a-zA-Z]\\s*([+-])\\s*(-?\\d*(\\.\\d+)?)\\s*for\\s*[a-zA-Z]");
     }
 
     static boolean isHelp(String message) {
@@ -195,13 +194,18 @@ public class MathSolverActualFinal {
 
     public static double[] parseQuadraticEquation(String input) {
         // Regex pattern to match the quadratic equation format
-        Pattern pattern = Pattern.compile("solve\\s+(-?\\d*)x\\^2\\s*([+-])\\s*(-?\\d*)x\\s*([+-])\\s*(-?\\d+)\\s*for\\s*x");
+        Pattern pattern = Pattern.compile("\\?solve\\s+(-?\\d*(\\.\\d+)?)[a-zA-Z]\\^2\\s*([+-])\\s*(-?\\d*(\\.\\d+)?)[a-zA-Z]\\s*([+-])\\s*(-?\\d*(\\.\\d+)?)\\s*for\\s*[a-zA-Z]");
         Matcher matcher = pattern.matcher(input);
 
         if (matcher.find()) {
-            double a = matcher.group(1).isEmpty() ? 1.0 : Double.parseDouble(matcher.group(1));
-            double b = parseSignedCoefficient(matcher.group(2), matcher.group(3).isEmpty() ? "1" : matcher.group(3));
-            double c = Double.parseDouble(matcher.group(5));
+            // Debugging: Print out each group captured by the regex
+            for (int i = 1; i <= matcher.groupCount(); i++) {
+                LOGGER.info("Group " + i + ": " + matcher.group(i));
+            }
+
+            double a = parseCoefficient(matcher.group(1));
+            double b = parseSignedCoefficient(matcher.group(3), matcher.group(4));
+            double c = parseCoefficient(matcher.group(7));
 
             return new double[]{a, b, c};
         } else {
@@ -209,8 +213,15 @@ public class MathSolverActualFinal {
         }
     }
 
+    private static double parseCoefficient(String value) {
+        if (value == null || value.isEmpty()) {
+            return 1.0; // Default coefficient value if empty
+        }
+        return Double.parseDouble(value);
+    }
+
     private static double parseSignedCoefficient(String sign, String value) {
-        double coefficient = Double.parseDouble(value);
+        double coefficient = parseCoefficient(value);
         return sign.equals("-") ? -coefficient : coefficient;
     }
 
